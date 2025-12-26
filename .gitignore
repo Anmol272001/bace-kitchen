@@ -1,0 +1,6 @@
+# PDFs (Reference documents - not needed for deployment)
+*.pdf
+
+# System files
+.DS_Store
+Thumbs.db

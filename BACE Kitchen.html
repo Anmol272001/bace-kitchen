@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACE Kitchen Manager (हिन्दी/English)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        saffron: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' },
+                        clay: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+            background-color: #fafaf9;
+            color: #44403c;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 300px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f4;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d6d3d1;
+            border-radius: 4px;
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #ea580c;
+            color: #ea580c;
+            font-weight: 700;
+        }
+
+        .tab-inactive {
+            color: #78716c;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-72 bg-stone-900 text-stone-100 flex flex-col shadow-xl z-20 shrink-0">
+        <div class="p-6 border-b border-stone-800">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-2xl font-bold text-saffron-400">BACE KITCHEN</h1>
+                <button onclick="toggleLanguage()" id="lang-toggle-btn"
+                    class="bg-saffron-600 hover:bg-saffron-500 text-white text-[10px] px-2 py-1 rounded font-bold transition-all uppercase tracking-tighter">
+                    English
+                </button>
+            </div>
+            <p id="sidebar-subtitle" class="text-[10px] text-stone-400 uppercase tracking-widest font-bold">इन-चार्ज
+                कंसोल</p>
+        </div>
+
+        <nav id="sidebar-nav" class="flex-1 overflow-y-auto py-4 space-y-1">
+            <button onclick="showSection('dashboard')"
+                class="w-full text-left px-6 py-4 hover:bg-stone-800 transition-colors flex items-center gap-4 nav-btn bg-stone-800 text-saffron-400"
+                data-target="dashboard">
+                <span class="text-xl">📊</span> <span class="nav-text" data-key="nav_dashboard">डैशबोर्ड</span>
+            </button>
+            <button onclick="showSection('guidelines')"
+                class="w-full text-left px-6 py-4 hover:bg-stone-800 transition-colors flex items-center gap-4 nav-btn text-stone-300"
+                data-target="guidelines">
+                <span class="text-xl">📜</span> <span class="nav-text" data-key="nav_guidelines">नियम और मानक</span>
+            </button>
+            <button onclick="showSection('recipes')"
+                class="w-full text-left px-6 py-4 hover:bg-stone-800 transition-colors flex items-center gap-4 nav-btn text-stone-300"
+                data-target="recipes">
+                <span class="text-xl">🍲</span> <span class="nav-text" data-key="nav_recipes">व्यंजन सूची</span>
+            </button>
+            <button onclick="showSection('planner')"
+                class="w-full text-left px-6 py-4 hover:bg-stone-800 transition-colors flex items-center gap-4 nav-btn text-stone-300"
+                data-target="planner">
+                <span class="text-xl">📝</span> <span class="nav-text" data-key="nav_planner">भोज योजना</span>
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-stone-800 text-center">
+            <p id="motto" class="text-xs text-stone-500 italic">"स्वच्छता ही भक्ति है"</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto relative bg-stone-50">
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="p-6 md:p-10 max-w-6xl mx-auto space-y-8 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-md p-8 border-l-8 border-saffron-500">
+                <h2 id="dash-welcome" class="text-3xl font-bold text-stone-800 mb-2">स्वागत है, किचन इन-चार्ज</h2>
+                <p id="dash-subtitle" class="text-stone-600 text-lg">BACE निवासियों के लिए शुद्ध प्रसाद सेवा का प्रबंधन।
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div
+                    class="bg-gradient-to-br from-saffron-50 to-white p-8 rounded-xl shadow-sm border border-saffron-100 col-span-1 md:col-span-2">
+                    <h3 class="text-saffron-800 font-bold mb-4 flex items-center gap-2 text-xl">
+                        <span>✨</span> <span data-key="quote_title">आज का विचार</span>
+                    </h3>
+                    <blockquote id="daily-quote"
+                        class="text-stone-700 text-xl font-medium leading-relaxed border-l-4 border-saffron-300 pl-6 py-2">
+                        "रसोई बहुत साफ होनी चाहिए और कुछ भी बर्बाद नहीं होना चाहिए।"
+                    </blockquote>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 flex flex-col items-center">
+                    <h3 data-key="chart_title" class="text-stone-800 font-bold mb-4 w-full text-left">व्यंजनों का विवरण
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="recipeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-stone-100 col-span-1 md:col-span-3">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 data-key="check_title" class="text-xl font-bold text-stone-800">✅ दैनिक तैयारी चेकलिस्ट</h3>
+                        <button onclick="resetChecklist()"
+                            class="text-sm font-bold text-saffron-600 hover:text-saffron-800 underline uppercase tracking-tighter"
+                            data-key="btn_reset">रीसेट करें</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="checklist-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Guidelines -->
+        <section id="guidelines" class="hidden p-6 md:p-10 max-w-6xl mx-auto space-y-8 animate-fade-in">
+            <h2 data-key="guidelines_main_title" class="text-4xl font-bold text-stone-800">दिशानिर्देश और मानक</h2>
+
+            <div class="flex border-b border-stone-200 mb-8 overflow-x-auto bg-white p-1 rounded-t-xl">
+                <button onclick="showGuidelineTab('hygiene')" id="tab-btn-hygiene"
+                    class="px-8 py-4 tab-active whitespace-nowrap" data-key="tab_hygiene">स्वच्छता (Suci)</button>
+                <button onclick="showGuidelineTab('process')" id="tab-btn-process"
+                    class="px-8 py-4 tab-inactive whitespace-nowrap" data-key="tab_process">खाना पकाने की विधि</button>
+                <button onclick="showGuidelineTab('serving')" id="tab-btn-serving"
+                    class="px-8 py-4 tab-inactive whitespace-nowrap" data-key="tab_serving">परोसने का शिष्टाचार</button>
+            </div>
+
+            <div id="guideline-content"
+                class="bg-white rounded-xl shadow-lg p-10 min-h-[500px] border border-stone-100"></div>
+        </section>
+
+        <!-- Recipes -->
+        <section id="recipes" class="hidden p-6 md:p-10 max-w-7xl mx-auto animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+                <div>
+                    <h2 data-key="recipes_main_title" class="text-4xl font-bold text-stone-800">व्यंजन डेटाबेस</h2>
+                    <p data-key="recipes_subtitle" class="text-stone-500 text-lg">20-25 व्यक्तियों के लिए प्रमाणित
+                        फॉर्मूले।</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <input type="text" id="recipe-search" placeholder="व्यंजन खोजें..."
+                        class="px-6 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saffron-400 w-full md:w-72 shadow-inner">
+                    <select id="category-filter"
+                        class="px-4 py-3 border border-stone-200 rounded-xl bg-white font-bold text-stone-600 shadow-sm"></select>
+                </div>
+            </div>
+            <div id="recipe-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+            </div>
+        </section>
+
+        <!-- Planner -->
+        <section id="planner" class="hidden p-6 md:p-10 max-w-6xl mx-auto animate-fade-in">
+            <div class="flex justify-between items-center mb-10">
+                <h2 data-key="planner_title" class="text-4xl font-bold text-stone-800">भोज योजनाकार</h2>
+                <button onclick="printMenu()"
+                    class="bg-stone-900 text-white px-6 py-2 rounded-lg font-bold hover:bg-stone-800 shadow-lg"
+                    data-key="btn_print">प्रिंट करें</button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div class="bg-white p-8 rounded-xl shadow-md space-y-6 border border-stone-100">
+                    <h3 data-key="planner_select_title" class="text-2xl font-bold text-saffron-600 mb-6">भोज के लिए
+                        चुनें</h3>
+                    <div id="planner-selectors" class="space-y-5"></div>
+                    <button onclick="generatePlan()"
+                        class="w-full bg-saffron-500 text-white py-4 rounded-xl font-bold text-xl hover:bg-saffron-600 shadow-xl transition-all"
+                        data-key="btn_generate">मेन्यू तैयार करें</button>
+                </div>
+                <div id="menu-preview"
+                    class="bg-amber-50 rounded-xl p-10 flex flex-col items-center justify-center text-stone-400 border-2 border-dashed border-amber-200 shadow-inner">
+                    <span class="text-6xl mb-4">🥣</span>
+                    <p data-key="planner_placeholder">मेन्यू देखने के लिए व्यंजनों का चयन करें।</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="recipe-modal"
+        class="fixed inset-0 bg-stone-900/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col scale-95 transition-all duration-200">
+            <div class="bg-saffron-50 p-8 border-b border-saffron-100 flex justify-between items-start">
+                <div>
+                    <span id="modal-category"
+                        class="text-xs font-bold text-saffron-600 uppercase tracking-widest bg-saffron-100 px-3 py-1 rounded-full">श्रेणी</span>
+                    <h2 id="modal-title" class="text-3xl font-bold text-stone-800 mt-3">व्यंजन का नाम</h2>
+                    <div class="flex items-center gap-3 mt-4">
+                        <label class="text-sm font-bold text-stone-500" data-key="modal_scale">व्यक्तियों की
+                            संख्या:</label>
+                        <input type="number" id="scaler-input" value="25" min="5"
+                            class="w-20 p-2 border border-stone-300 rounded-lg text-center font-bold text-saffron-700 focus:ring-2 focus:ring-saffron-500">
+                        <button onclick="updateScaling()"
+                            class="bg-stone-200 hover:bg-stone-300 px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                            data-key="btn_apply">लागू करें</button>
+                    </div>
+                </div>
+                <button onclick="closeModal()"
+                    class="text-stone-400 hover:text-stone-900 text-4xl leading-none">&times;</button>
+            </div>
+            <div class="overflow-y-auto p-8 bg-white flex-1">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div class="lg:col-span-1 bg-stone-50 p-6 rounded-xl h-fit border border-stone-100 shadow-sm">
+                        <h3 data-key="modal_ing_title" class="font-bold text-stone-800 text-xl border-b pb-3 mb-4">
+                            सामग्री</h3>
+                        <ul id="modal-ingredients" class="space-y-3 text-stone-700 font-medium"></ul>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <h3 data-key="modal_method_title" class="font-bold text-stone-800 text-xl border-b pb-3 mb-4">
+                            बनाने की विधि</h3>
+                        <ol id="modal-method" class="space-y-6 text-stone-700 list-decimal pl-6 text-lg"></ol>
+                        <div class="mt-10 bg-amber-50 border-l-8 border-amber-400 p-6 rounded-r-xl shadow-sm">
+                            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2"><span>💡</span> <span
+                                    data-key="modal_tip_title">विशेष टिप</span></h4>
+                            <p id="modal-tip" class="text-amber-900 italic"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripting Layer -->
+    <script>
+        let currentLang = 'hi';
+        let recipeChartInstance = null; // Fix: Add variable to track the Chart instance
+
+        const i18n = {
+            hi: {
+                nav_dashboard: "डैशबोर्ड", nav_guidelines: "नियम और मानक", nav_recipes: "व्यंजन सूची", nav_planner: "भोज योजना",
+                sidebar_subtitle: "इन-चार्ज कंसोल", motto: '"स्वच्छता ही भक्ति है"',
+                dash_welcome: "स्वागत है, किचन इन-चार्ज", dash_subtitle: "BACE निवासियों के लिए शुद्ध प्रसाद सेवा का प्रबंधन।",
+                quote_title: "आज का विचार", chart_title: "व्यंजनों का विवरण", check_title: "दैनिक तैयारी चेकलिस्ट", btn_reset: "रीसेट",
+                guidelines_main_title: "दिशानिर्देश और मानक", tab_hygiene: "स्वच्छता (Suci)", tab_process: "खाना पकाने की विधि", tab_serving: "परोसने का शिष्टाचार",
+                recipes_main_title: "व्यंजन डेटाबेस", recipes_subtitle: "20-25 व्यक्तियों के लिए प्रमाणित रेसिपी।", search_placeholder: "व्यंजन खोजें...",
+                planner_title: "भोज योजनाकार", btn_print: "प्रिंट", planner_select_title: "भोज के लिए चुनें", btn_generate: "मेन्यू तैयार करें", planner_placeholder: "मेन्यू देखने के लिए व्यंजनों का चयन करें।",
+                modal_scale: "व्यक्तियों की संख्या:", btn_apply: "लागू करें", modal_ing_title: "सामग्री", modal_method_title: "बनाने की विधि", modal_tip_title: "विशेष टिप",
+                cat_rice: "चावल और अनाज", cat_dal: "दालें और प्रोटीन", cat_sabji: "सब्जियां", cat_snacks: "नाश्ता और स्नैक्स", cat_sweets: "मिठाई और डेसर्ट", cat_ekadashi: "एकादशी विशेष"
+            },
+            en: {
+                nav_dashboard: "Dashboard", nav_guidelines: "Guidelines", nav_recipes: "Recipe Database", nav_planner: "Feast Planner",
+                sidebar_subtitle: "In-Charge Console", motto: '"Cleanliness is next to Godliness"',
+                dash_welcome: "Welcome, Kitchen In-Charge", dash_subtitle: "Managing Prasadam for BACE residents.",
+                quote_title: "Daily Inspiration", chart_title: "Recipe Distribution", check_title: "Daily Readiness Checklist", btn_reset: "RESET",
+                guidelines_main_title: "Guidelines & Standards", tab_hygiene: "Hygiene (Suci)", tab_process: "Cooking Process", tab_serving: "Serving Etiquette",
+                recipes_main_title: "Recipe Vault", recipes_subtitle: "Standardized for 20-25 residents.", search_placeholder: "Search recipes...",
+                planner_title: "Feast Planner", btn_print: "PRINT", planner_select_title: "Select Menu Items", btn_generate: "Generate Menu", planner_placeholder: "Select items to see the plan.",
+                modal_scale: "Scaling for:", btn_apply: "APPLY", modal_ing_title: "Ingredients", modal_method_title: "Method", modal_tip_title: "Kitchen Tip",
+                cat_rice: "Rice & Grain", cat_dal: "Lentils & Dals", cat_sabji: "Vegetables", cat_snacks: "Breakfast & Snacks", cat_sweets: "Sweets & Desserts", cat_ekadashi: "Ekadashi Specials"
+            }
+        };
+
+        const recipes = [
+            // I. Rice & Grain (1-10)
+            { id: 1, category: "cat_rice", title_hi: "परफेक्ट बासमती चावल", title_en: "Perfect Basmati Rice", ingredients_hi: ["2.5 किलो बासमती चावल", "5.5 लीटर पानी", "3 बड़े चम्मच घी", "4 तेज पत्ता", "1.5 चम्मच नमक"], ingredients_en: ["2.5 kg Basmati Rice", "5.5 L Water", "3 tbsp Ghee", "4 Bay leaves", "1.5 tsp Salt"], method_hi: ["चावल को 3-4 बार धोएं और 20 मिनट भिगोएं।", "घी गरम करें, तेज पत्ता और चावल डालकर 2 मिनट भूनें।", "पानी और नमक डालें। उबाल आने दें।", "सबसे धीमी आंच पर 15 मिनट पकाएं। 10 मिनट बाद ही ढक्कन खोलें।"], method_en: ["Wash rice 3-4 times. Soak 20 mins.", "Heat ghee, sauté bay leaves and rice for 2 mins.", "Add water and salt. Bring to boil.", "Simmer on lowest heat for 15 mins. Let rest for 10 mins."], tip_hi: "चावल को सफेद रखने के लिए उबालते समय 1 चम्मच नींबू का रस डालें।", tip_en: "Add 1 tsp lemon juice for pearl white grains." },
+            { id: 2, category: "cat_rice", title_hi: "फेस्टिव वेजिटेबल पुलाव", title_en: "Festive Vegetable Pulao", ingredients_hi: ["2.5 किलो चावल", "500 ग्राम मटर", "500 ग्राम गाजर", "250 ग्राम पनीर (तला हुआ)", "100 ग्राम काजू", "5 लीटर पानी", "खड़े मसाले"], ingredients_en: ["2.5 kg Rice", "500g Peas", "500g Carrots", "250g Paneer (fried)", "100g Cashews", "5 L Water", "Whole Spices"], method_hi: ["घी में खड़े मसाले और काजू भूनें।", "गाजर और मटर डालकर 5 मिनट पकाएं।", "चावल और गरम पानी डालें।", "90% पकने पर पनीर मिलाएं और 10 मिनट दम पर पकाएं।"], method_en: ["Sauté whole spices and cashews in ghee.", "Add carrots and peas; fry 5 mins.", "Add rice and hot water.", "At 90% done, fold in paneer and Dum cook for 10 mins."], tip_hi: "गर्म पानी का उपयोग करें ताकि चावल चिपचिपे न हों।", tip_en: "Use warm water to prevent mushiness." },
+            { id: 3, category: "cat_rice", title_hi: "क्लासिक जीरा राइस", title_en: "Classic Jeera Rice", ingredients_hi: ["2.5 किलो चावल", "4 बड़े चम्मच जीरा", "4 बड़े चम्मच घी", "नमक स्वाद अनुसार", "ताजा धनिया"], ingredients_en: ["2.5 kg Rice", "4 tbsp Cumin Seeds", "4 tbsp Ghee", "Salt to taste", "Fresh Coriander"], method_hi: ["घी गरम करें और जीरा तड़काएं।", "भिगोया हुआ चावल डालकर 2 मिनट भूनें।", "पानी और नमक डालकर पकाएं।", "पकने के बाद धनिया से सजाएं।"], method_en: ["Heat ghee, temper cumin.", "Add soaked rice, sauté 2 mins.", "Add water, salt, cook.", "Garnish with coriander."], tip_hi: "जीरे को काला न होने दें, बस सुनहरा भूनें।", tip_en: "Don't burn cumin, just golden brown." },
+            { id: 4, category: "cat_rice", title_hi: "लेमन राइस", title_en: "Lemon Rice", ingredients_hi: ["2.5 किलो चावल (पका हुआ)", "1 कप नींबू का रस", "1 कप मूंगफली", "कढ़ी पत्ता", "हल्दी", "हरी मिर्च"], ingredients_en: ["2.5 kg Rice (cooked)", "1 cup Lemon Juice", "1 cup Peanuts", "Curry Leaves", "Turmeric", "Green Chilies"], method_hi: ["तेल में मूंगफली, कढ़ी पत्ता, मिर्च भूनें।", "हल्दी डालें।", "पके हुए चावल और नींबू का रस मिलाएं।"], method_en: ["Fry peanuts, curry leaves, chilies.", "Add turmeric.", "Mix with cooked rice and lemon juice."], tip_hi: "नींबू का रस गैस बंद करने के बाद डालें।", tip_en: "Add lemon juice after heat off to avoid bitterness." },
+            { id: 5, category: "cat_rice", title_hi: "साउथ इंडियन कर्ड राइस", title_en: "South Indian Curd Rice", ingredients_hi: ["2.5 किलो चावल (मेश किया हुआ)", "3 लीटर दही", "1 कप दूध", "अनार दाने", "तड़का (राई, कढ़ी पत्ता)"], ingredients_en: ["2.5 kg Rice (mashed)", "3 L Curd", "1 cup Milk", "Pomegranate seeds", "Tempering (Mustard, Curry leaves)"], method_hi: ["चावल, दही और दूध मिलाएं।", "राई और कढ़ी पत्ते का तड़का लगाएं।", "अनार से सजाएं।"], method_en: ["Mix rice, curd, milk.", "Add tampering.", "Garnish with pomegranate."], tip_hi: "दूध डालने से दही खट्टा नहीं होता।", tip_en: "Milk prevents curd from turning sour." },
+            { id: 6, category: "cat_rice", title_hi: "स्वीट सैफरन राइस (केसरी)", title_en: "Sweet Saffron Rice (Kesari)", ingredients_hi: ["2 किलो चावल", "1.5 किलो चीनी", "केसर दूध", "काजू-किशमिश", "लौंग, इलायची"], ingredients_en: ["2 kg Rice", "1.5 kg Sugar", "Saffron Milk", "Cashews/Raisins", "Cloves, Cardamom"], method_hi: ["चावल को 80% पकाएं।", "चीनी और केसर दूध की चाशनी बनाएं।", "चावल मिलाएं और दम दें।"], method_en: ["Cook rice 80%.", "Make syrup with sugar/saffron.", "Mix rice and dum."], tip_hi: "चावल पूरी तरह पकने के बाद ही चीनी डालें।", tip_en: "Add sugar only after rice is cooked." },
+            { id: 7, category: "cat_rice", title_hi: "BACE मसाला खिचड़ी", title_en: "BACE Masala Khichari", ingredients_hi: ["1.5 किलो चावल", "1 किलो मूंग दाल", "MIX सब्जियां (गाजर, मटर, गोभी)", "मसाले (हल्दी, मिर्च)", "घी"], ingredients_en: ["1.5 kg Rice", "1 kg Moong Dal", "Mix Veg (Carrot, Peas, Gobi)", "Spices", "Ghee"], method_hi: ["दाल-चावल और सब्जियां एक साथ उबालें।", "मसालों का तड़का लगाएं।", "घी ऊपर से डालें।"], method_en: ["Boil dal-rice and veggies.", "Add spiced tempering.", "Top with ghee."], tip_hi: "घी की मात्रा स्वाद बढ़ाती है।", tip_en: "More ghee equals more taste." },
+            { id: 8, category: "cat_rice", title_hi: "इमली चावल (पुलिहोरा)", title_en: "Tamarind Rice (Pulihora)", ingredients_hi: ["2.5 किलो चावल", "500 ग्राम इमली पेस्ट", "मूंगफली", "कढ़ी पत्ता", "लाल मिर्च"], ingredients_en: ["2.5 kg Rice", "500g Tamarind Paste", "Peanuts", "Curry Leaves", "Red Chili"], method_hi: ["इमली पेस्ट को मसालों के साथ पकाएं।", "उबले चावल में मिलाएं।", "मूंगफली भूनकर डालें।"], method_en: ["Cook tamarind paste with spices.", "Mix into boiled rice.", "Add roasted peanuts."], tip_hi: "पेस्ट को गाढ़ा होने तक पकाएं।", tip_en: "Cook paste till oil separates." },
+            { id: 9, category: "cat_rice", title_hi: "हैदराबादी वेज दम बिरयानी", title_en: "Hyderabadi Veg Dum Biryani", ingredients_hi: ["2 किलो बासमती", "2 किलो सब्जियां", "1 लीटर दही", "बिरयानी मसाला", "केसर", "पुदीना"], ingredients_en: ["2 kg Basmati", "2 kg Veggies", "1 L Curd", "Biryani Masala", "Saffron", "Mint"], method_hi: ["सब्जियों को दही मसालों में मैरीनेट करें।", "चावल और सब्जी की परत लगाएं।", "30 मिनट दम दें।"], method_en: ["Marinate veggies in curd/spices.", "Layer rice and veggies.", "Dum for 30 mins."], tip_hi: "बरिस्ता (तला प्याज) के बिना भी अच्छी बनती है यदि मसाले सही हों।", tip_en: "Use fresh mint for aroma." },
+            { id: 10, category: "cat_rice", title_hi: "नारियल चावल", title_en: "Coconut Rice", ingredients_hi: ["2.5 किलो चावल", "3 नारियल (कद्दूकस)", "काजू", "उड़द दाल", "कढ़ी पत्ता"], ingredients_en: ["2.5 kg Rice", "3 Coconuts (grated)", "Cashews", "Urad Dal", "Curry Leaves"], method_hi: ["तेल में उड़द दाल, काजू और कढ़ी पत्ता भूनें।", "नारियल डालें और हल्का भूनें।", "चावल मिलाएं।"], method_en: ["Fry urad dal, cashews, curry leaves.", "Add coconut, sauté lightly.", "Mix rice."], tip_hi: "ताजा नारियल का ही प्रयोग करें।", tip_en: "Use fresh coconut only." },
+
+            // II. Lentils & Dals (11-19)
+            { id: 11, category: "cat_dal", title_hi: "BACE डेली दाल (अरहर)", title_en: "BACE Daily Dal (Toor)", ingredients_hi: ["1.5 किलो अरहर दाल", "6 लीटर पानी", "1.5 चम्मच हल्दी", "1.5 चम्मच हींग", "4 चम्मच जीरा", "150 ग्राम घी", "टमाटर"], ingredients_en: ["1.5 kg Toor dal", "6 L Water", "1.5 tsp Turmeric", "1.5 tsp Hing", "4 tbsp Cumin", "150g Ghee", "Tomatoes"], method_hi: ["दाल को हल्दी के साथ पूरी तरह गलने तक उबालें।", "मथनी से अच्छी तरह फेंटें।", "घी गरम कर जीरा, हींग और टमाटर का तड़का लगाएं।"], method_en: ["Boil dal with turmeric till mushy.", "Whisk smooth.", "Temper with ghee, cumin, hing, tomatoes."], tip_hi: "टमाटर को तड़के में पूरी तरह गलाएं।", tip_en: "Cook tomatoes fully in tempering." },
+            { id: 12, category: "cat_dal", title_hi: "दाल मखनी", title_en: "Dal Makhani", ingredients_hi: ["1 किलो उड़द दाल", "250 ग्राम राजमा", "500 ग्राम मक्खन", "500 मिली क्रीम", "टमाटर प्यूरी"], ingredients_en: ["1 kg Urad Dal", "250g Kidney Beans", "500g Butter", "500ml Cream", "Tomato Puree"], method_hi: ["दाल-राजमा रात भर भिगोएं और उबालें।", "मक्खन और प्यूरी का तड़का लगाएं।", "धीमी आंच पर 2 घंटे पकाएं, क्रीम डालें।"], method_en: ["Soak dal/rajma overnight, boil.", "Temper with butter/puree.", "Simmer 2 hrs, add cream."], tip_hi: "जितना ज्यादा पकाएंगे, उतना स्वाद आएगा।", tip_en: "Slow cook for best taste." },
+            { id: 13, category: "cat_dal", title_hi: "चना मसाला", title_en: "Chana Masala", ingredients_hi: ["1.5 किलो काबुली चना", "चना मसाला पाउडर", "टमाटर", "अदरक", "धनिया"], ingredients_en: ["1.5 kg Chickpeas", "Chana Masala Powder", "Tomatoes", "Ginger", "Coriander"], method_hi: ["चने उबालें।", "टमाटर-अदरक पेस्ट भूनें और मसाले डालें।", "चने मिलाकर पकाएं।"], method_en: ["Boil chickpeas.", "Fry tomato-ginger paste/spices.", "Mix and cook."], tip_hi: "थोड़े चने मैश करें ग्रेवी गाढ़ी करने के लिए।", tip_en: "Mash some chickpeas to thicken gravy." },
+            { id: 14, category: "cat_dal", title_hi: "पंचमेल दाल", title_en: "Panchmel Dal", ingredients_hi: ["1.5 किलो मिक्स दाल (5 प्रकार)", "घी", "लौंग", "इलायची", "अदरक"], ingredients_en: ["1.5 kg Mixed Dal (5 types)", "Ghee", "Cloves", "Cardamom", "Ginger"], method_hi: ["सभी दालें उबालें।", "खड़े मसालों और घी का तड़का लगाएं।"], method_en: ["Boil all dals.", "Temper with whole spices/ghee."], tip_hi: "उड़द दाल जरूर शामिल करें।", tip_en: "Include Urad dal for texture." },
+            { id: 15, category: "cat_dal", title_hi: "साबुत मसूर दाल", title_en: "Whole Masoor Dal", ingredients_hi: ["1.5 किलो काली मसूर", "मक्खन", "टमाटर", "गरम मसाला", "क्रीम"], ingredients_en: ["1.5 kg Black Masoor", "Butter", "Tomatoes", "Garam Masala", "Cream"], method_hi: ["दाल उबालें (ज्यादा न गलाएं)।", "मक्खन-टमाटर मसाला बनाएं।", "दाल और क्रीम मिलाएं।"], method_en: ["Boil dal (al dente).", "Make butter-tomato masala.", "Add dal and cream."], tip_hi: "यह दाल थोड़ी खड़ी रहनी चाहिए।", tip_en: "Keep lentils slightly firm." },
+            { id: 16, category: "cat_dal", title_hi: "दाल तड़का (येलो)", title_en: "Dal Tadka (Yellow)", ingredients_hi: ["1 किलो मूंग-मसूर मिक्स", "घी", "लाल मिर्च", "जीरा", "धनिया"], ingredients_en: ["1 kg Moong-Masoor Mix", "Ghee", "Red Chili", "Cumin", "Coriander"], method_hi: ["दाल उबालें।", "ऊपर से घी और लाल मिर्च का डबल तड़का लगाएं।"], method_en: ["Boil dal.", "Pour double tadka of ghee/chili on top."], tip_hi: "परोसते समय दूसरा तड़का लगाएं।", tip_en: "Add second tadka just before serving." },
+            { id: 17, category: "cat_dal", title_hi: "गुजराती कढ़ी", title_en: "Gujarati Kadhi", ingredients_hi: ["2 लीटर दही", "200 ग्राम बेसन", "गुड़", "कढ़ी पत्ता", "मेथी दाना"], ingredients_en: ["2 L Curd", "200g Besan", "Jaggery", "Curry Leaves", "Fenugreek Seeds"], method_hi: ["दही-बेसन घोलें।", "मेथी-कढ़ी पत्ता तड़का लगाएं।", "गुड़ डालें और उबालें।"], method_en: ["Whisk curd/besan.", "Temper methi/curry leaves.", "Add jaggery and boil."], tip_hi: "इसे पतला रखें और खट्टा-मीठा बनाएं।", tip_en: "Keep consistency thin; taste sweet-sour." },
+            { id: 18, category: "cat_dal", title_hi: "मूंग दाल पालक", title_en: "Moong Dal Spinach", ingredients_hi: ["1 किलो मूंग दाल", "1 किलो पालक", "टमाटर", "हींग", "घी"], ingredients_en: ["1 kg Moong Dal", "1 kg Spinach", "Tomatoes", "Hing", "Ghee"], method_hi: ["दाल और पालक साथ उबालें।", "हींग-टमाटर का तड़का लगाएं।"], method_en: ["Boil dal and spinach together.", "Temper with hing/tomatoes."], tip_hi: "पालक को ज्यादा न पकाएं।", tip_en: "Don't overcook spinach." },
+            { id: 19, category: "cat_dal", title_hi: "लोबिया करी (Black-Eyed Peas)", title_en: "Lobia Curry", ingredients_hi: ["1.5 किलो लोबिया", "टमाटर प्यूरी", "अदरक", "जीरा पाउडर", "धनिया पाउडर"], ingredients_en: ["1.5 kg Lobia", "Tomato Puree", "Ginger", "Cumin Powder", "Coriander Powder"], method_hi: ["लोबिया उबालें।", "टमाटर-अदरक पेस्ट भूनें।", "मिलाकर 10 मिनट पकाएं।"], method_en: ["Boil lobia.", "Cook tomato-ginger paste.", "Simmer together 10 mins."], tip_hi: "लोबिया को रात भर न भिगोएं, 2 घंटे काफी हैं।", tip_en: "Soak 2 hrs, not overnight." },
+
+            // III. Vegetables & Main Dishes (20-35)
+            { id: 20, category: "cat_sabji", title_hi: "आलू गोभी", title_en: "Aloo Gobhi", ingredients_hi: ["2 किलो आलू", "2 किलो फूलगोभी", "अदरक", "टमाटर", "गरम मसाला"], ingredients_en: ["2 kg Potato", "2 kg Cauliflower", "Ginger", "Tomatoes", "Garam Masala"], method_hi: ["आलू और गोभी फ्राई करें।", "अदरक-टमाटर मसाला भूनें।", "सब्जियां मिलाकर दम पर पकाएं।"], method_en: ["Deep fry potato/gobi.", "Cook ginger-tomato masala.", "Mix and steam cook."], tip_hi: "गोभी को टूटने न दें।", tip_en: "Don't let florets break." },
+            { id: 21, category: "cat_sabji", title_hi: "भिंडी मसाला", title_en: "Bhindi Masala", ingredients_hi: ["3 किलो भिंडी", "दही", "बेसन", "अमचूर", "सौंफ"], ingredients_en: ["3 kg Okra", "Yogurt", "Besan", "Amchur", "Fennel"], method_hi: ["भिंडी फ्राई करें।", "दही-बेसन मसाला भूनें।", "भिंडी मिलाएं।"], method_en: ["Fry okra.", "Cook yogurt-besan masala.", "Mix okra."], tip_hi: "भिंडी धोकर पूरी तरह सुखाएं।", tip_en: "Dry okra completely before cutting." },
+            { id: 22, category: "cat_sabji", title_hi: "पनीर बटर मसाला", title_en: "Paneer Butter Masala", ingredients_hi: ["2 किलो पनीर", "2.5 किलो टमाटर प्यूरी", "300 ग्राम मक्खन", "300 मिली क्रीम", "कसूरी मेथी"], ingredients_en: ["2 kg Paneer", "2.5 kg Tomato puree", "300g Butter", "300ml Cream", "Kasuri Methi"], method_hi: ["मक्खन में टमाटर भूनें।", "क्रीम, पनीर डालें।", "कसूरी मेथी छिड़कें।"], method_en: ["Sauté tomato in butter.", "Add cream, paneer.", "Finish with Kasuri Methi."], tip_hi: "काजू पेस्ट ग्रेवी को गाढ़ा करने के लिए डालें।", tip_en: "Add cashew paste for thickness." },
+            { id: 23, category: "cat_sabji", title_hi: "केला कोफ्ता करी", title_en: "Banana Kofta Curry", ingredients_hi: ["2 दर्जन कच्चे केले", "बेसन", "टमाटर ग्रेवी", "काजू पेस्ट", "गरम मसाला"], ingredients_en: ["2 dozen Raw Bananas", "Besan", "Tomato Gravy", "Cashew Paste", "Garam Masala"], method_hi: ["उबले केले और बेसन के कोफ्ते तलें।", "शाही ग्रेवी बनाएं।", "परोसते समय कोफ्ते डालें।"], method_en: ["Fry banana/besan dumplings.", "Make rich gravy.", "Add koftas at serving."], tip_hi: "कोफ्ते ग्रेवी सोख लेते हैं, ग्रेवी पतली रखें।", tip_en: "Gravy thickens fast; keep thin." },
+            { id: 24, category: "cat_sabji", title_hi: "आलू मटर", title_en: "Aloo Matar", ingredients_hi: ["2 किलो आलू", "1 किलो मटर", "टमाटर", "हींग", "धनिया"], ingredients_en: ["2 kg Potato", "1 kg Peas", "Tomatoes", "Hing", "Coriander"], method_hi: ["आलू-मटर उबालें या भूनें।", "हींग-टमाटर ग्रेवी में पकाएं।"], method_en: ["Boil/fry potatoes & peas.", "Cook in hing-tomato gravy."], tip_hi: "ताजा मटर का स्वाद बेहतर होता है।", tip_en: "Fresh peas taste better." },
+            { id: 25, category: "cat_sabji", title_hi: "ट्रेडिशनल साग", title_en: "Traditional Saag", ingredients_hi: ["3 किलो सरसों/पालक", "मक्का आटा", "घी", "अदरक", "गुड़"], ingredients_en: ["3 kg Mustard/Spinach", "Corn Flour", "Ghee", "Ginger", "Jaggery"], method_hi: ["साग उबालकर पीस लें।", "मक्का आटा और घी डालकर घोटें।"], method_en: ["Boil and mash greens.", "Cook with corn flour and ghee."], tip_hi: "धीमी आंच पर 1 घंटा पकाएं।", tip_en: "Slow cook for 1 hour." },
+            { id: 26, category: "cat_sabji", title_hi: "वेजिटेबल माखनवाला", title_en: "Vegetable Makhanwala", ingredients_hi: ["3 किलो मिक्स वेज", "मक्खन", "काजू पेस्ट", "क्रीम", "खड़े मसाले"], ingredients_en: ["3 kg Mix Veg", "Butter", "Cashew Paste", "Cream", "Whole Spices"], method_hi: ["सब्जियां उबाले।", "मखनी ग्रेवी बनाएं।", "सब्जियां मिलाएं।"], method_en: ["Boil veggies.", "Make makhani gravy.", "Combine."], tip_hi: "सब्जियां क्रंची रखें।", tip_en: "Keep veggies crunchy." },
+            { id: 27, category: "cat_sabji", title_hi: "आलू जीरा", title_en: "Aloo Jeera", ingredients_hi: ["2.5 किलो आलू (उबले)", "5 बड़े चम्मच जीरा", "घी", "अमचूर", "धनिया"], ingredients_en: ["2.5 kg Potato (boiled)", "5 tbsp Cumin", "Ghee", "Amchur", "Coriander"], method_hi: ["उबले आलू काटें।", "घी में जीरा तड़काएं और आलू भूनें (कुरकुरा होने तक)।", "अमचूर डालें।"], method_en: ["Cut boiled potatoes.", "Roast in ghee/cumin till crisp.", "Add amchur."], tip_hi: "आलू पूरी तरह ठंडा होने पर ही काटें।", tip_en: "Cool potatoes completely before cutting." },
+            { id: 28, category: "cat_sabji", title_hi: "भरवां शिमला मिर्च", title_en: "Stuffed Capsicum", ingredients_hi: ["20 शिमला मिर्च", "आलू भरावन", "पनीर", "काजू", "किशमिश"], ingredients_en: ["20 Capsicums", "Potato stuffing", "Paneer", "Cashews", "Raisins"], method_hi: ["शिमला मिर्च खोखली करें।", "आलू-पनीर मसाला भरें।", "ओवन या कड़ाही में सेकें।"], method_en: ["Hollow capsicums.", "Stuff with potato-paneer.", "Bake or roast."], tip_hi: "छोटी शिमला मिर्च चुनें।", tip_en: "Choose small capsicums." },
+            { id: 29, category: "cat_sabji", title_hi: "पत्तागोभी पीनट पोरियल", title_en: "Cabbage Peanut Poriyal", ingredients_hi: ["3 किलो पत्तागोभी", "500 ग्राम मूंगफली (कुटी हुई)", "नारियल", "राई", "कढ़ी पत्ता"], ingredients_en: ["3 kg Cabbage", "500g Peanuts (crushed)", "Coconut", "Mustard", "Curry Leaves"], method_hi: ["पत्तागोभी बारीक काटें।", "राई-कढ़ी पत्ता तड़का।", "अंत में मूंगफली और नारियल डालें।"], method_en: ["Shred cabbage.", "Temper mustard/curry leaves.", "Add peanuts/coconut at end."], tip_hi: "पत्तागोभी को ज्यादा न गलाएं।", tip_en: "Keep cabbage crunchy." },
+            { id: 30, category: "cat_sabji", title_hi: "मलाई कोफ्ता", title_en: "Malai Kofta", ingredients_hi: ["2 किलो आलू-पनीर मिक्स", "काजू-किशमिश भरावन", "व्हाइट ग्रेवी (काजू-खोया)", "इलायची"], ingredients_en: ["2 kg Potato-Paneer Mix", "Cashew-Raisin stuffing", "White Gravy (Cashew/Khoya)", "Cardamom"], method_hi: ["कोफ्ते तलें।", "सफेद शाही ग्रेवी बनाएं।", "परोसते समय मिलाएं।"], method_en: ["Fry koftas.", "Make white royal gravy.", "Mix at serving."], tip_hi: "ग्रेवी मीठी और शाही होनी चाहिए।", tip_en: "Gravy should be sweet and rich." },
+            { id: 31, category: "cat_sabji", title_hi: "बैंगन भरता", title_en: "Baingan Bharta", ingredients_hi: ["3 किलो बैंगन", "टमाटर", "अदरक", "हरी मिर्च", "सरसों का तेल"], ingredients_en: ["3 kg Eggplant", "Tomatoes", "Ginger", "Green Chili", "Mustard Oil"], method_hi: ["बैंगन भूनकर छीलें (स्मोकी)।", "टमाटर-अदरक मसाला भूनें और मैश बैंगन मिलाएं।"], method_en: ["Roast eggplant (smoky).", "Fry tomato-ginger masala, add mash."], tip_hi: "भुने बैंगन को पानी में न धोएं, धुंए का स्वाद चला जाएगा।", tip_en: "Don't wash roasted eggplant; saves smoky flavor." },
+            { id: 32, category: "cat_sabji", title_hi: "भिंडी फ्राई (कुरकुरी)", title_en: "Bhendi Fry (Crispy)", ingredients_hi: ["2 किलो भिंडी (लंबी कटी)", "बेसन", "चावल का आटा", "अमचूर", "तेल"], ingredients_en: ["2 kg Okra (julienne)", "Besan", "Rice Flour", "Amchur", "Oil"], method_hi: ["भिंडी पर मसाले और आटा छिड़कें।", "डीप फ्राई करें।"], method_en: ["Coat okra with spices/flour.", "Deep fry."], tip_hi: "तभी तलें जब परोसना हो।", tip_en: "Fry immediately before serving." },
+            { id: 33, category: "cat_sabji", title_hi: "लौकी कोफ्ता", title_en: "Lauki Kofta", ingredients_hi: ["3 किलो लौकी", "बेसन", "टमाटर ग्रेवी", "अजवाइन", "हींग"], ingredients_en: ["3 kg Bottle Gourd", "Besan", "Tomato Gravy", "Ajwain", "Hing"], method_hi: ["लौकी कद्दूकस कर पानी निचोड़ें, कोफ्ते तलें।", "मसालेदार ग्रेवी में डालें।"], method_en: ["Grate lauki, squeeze water, fry koftas.", "Add to spicy gravy."], tip_hi: "लौकी के पानी से आटा गूंथें, फेंकें नहीं।", tip_en: "Use lauki water for dough, don't discard." },
+            { id: 34, category: "cat_sabji", title_hi: "कद्दू की सब्जी", title_en: "Pumpkin Sabji", ingredients_hi: ["3 किलो कद्दू (लाल)", "मेथी दाना", "गुड़", "अमचूर", "हरी मिर्च"], ingredients_en: ["3 kg Red Pumpkin", "Fenugreek Seeds", "Jaggery", "Amchur", "Green Chili"], method_hi: ["मेथी दाना का तड़का।", "कद्दू पकाएं।", "गुड़ और अमचूर (खट्टा-मीठा) डालें।"], method_en: ["Temper fenugreek.", "Cook pumpkin.", "Add jaggery/amchur (sweet-sour)."], tip_hi: "छिलके सहित पकाएं (यदि नरम हो)।", tip_en: "Cook with skin if tender." },
+            { id: 35, category: "cat_sabji", title_hi: "मटर पनीर", title_en: "Matar Paneer", ingredients_hi: ["1.5 किलो पनीर", "1.5 किलो मटर", "टमाटर-काजू पेस्ट", "गरम मसाला", "धनिया"], ingredients_en: ["1.5 kg Paneer", "1.5 kg Peas", "Tomato-Cashew Paste", "Garam Masala", "Coriander"], method_hi: ["पनीर तलें।", "ग्रेवी भूनें।", "मटर और पनीर डालकर 10 मिनट पकाएं।"], method_en: ["Fry paneer.", "Cook gravy.", "Simmer with peas/paneer 10 mins."], tip_hi: "जमे हुए (frozen) मटर को अंत में डालें।", tip_en: "Add frozen peas at end." },
+
+            // IV. Breakfast & Snacks (36-43)
+            { id: 36, category: "cat_snacks", title_hi: "वेजिटेबल पोहा", title_en: "Vegetable Poha", ingredients_hi: ["1.5 किलो पोहा (मोटा)", "मूंगफली", "आलू", "मटर", "नींबू"], ingredients_en: ["1.5 kg Poha (thick)", "Peanuts", "Potato", "Peas", "Lemon"], method_hi: ["पोहा धोकर भिगोएं।", "आलू-मटर-मूंगफली भूनें।", "पोहा और नींबू मिलाएं।"], method_en: ["Rinse poha.", "Fry potato/peas/peanuts.", "Mix poha and lemon."], tip_hi: "पोहा केवल 2 मिनट भिगोएं।", tip_en: "Soak poha only 2 mins." },
+            { id: 37, category: "cat_snacks", title_hi: "उपमा", title_en: "Upma", ingredients_hi: ["1 किलो सूजी", "3 लीटर पानी", "गाजर-मटर", "काजू", "घी"], ingredients_en: ["1 kg Semolina", "3 L Water", "Carrot/Peas", "Cashews", "Ghee"], method_hi: ["सूजी भूनें।", "सब्जियां पकाएं और पानी उबालें।", "धीरे-धीरे सूजी मिलाएं।"], method_en: ["Roast semolina.", "Cook veggies, boil water.", "Add semolina gradually."], tip_hi: "उबलते पानी में सूजी डालते समय चलाते रहें।", tip_en: "Stir constantly adding semolina to boiling water." },
+            { id: 38, category: "cat_snacks", title_hi: "पंजाबी समोसा", title_en: "Punjabi Samosas", ingredients_hi: ["1 किलो मैदा", "2 किलो आलू (भरावन)", "मटर", "अजवाइन", "साबुत धनिया"], ingredients_en: ["1 kg Maida", "2 kg Potato (filling)", "Peas", "Ajwain", "Coriander Seeds"], method_hi: ["मैदा गूंथें (सख्त)।", "आलू मसाला भरें।", "धीमी आंच पर तलें।"], method_en: ["Knead stiff dough.", "Stuff potato masala.", "Fry on low heat."], tip_hi: "खस्ता के लिए मोयन (घी) सही मात्रा में डालें।", tip_en: "Add enough ghee to flour for crispiness." },
+            { id: 39, category: "cat_snacks", title_hi: "वेजिटेबल कटलेट", title_en: "Vegetable Cutlets", ingredients_hi: ["2 किलो आलू", "1 किलो बीटरूट/गाजर", "ब्रेड क्रम्स", "कॉर्न फ्लोर", "अदरक"], ingredients_en: ["2 kg Potato", "1 kg Beetroot/Carrot", "Bread Crumbs", "Corn Flour", "Ginger"], method_hi: ["सब्जियां उबालकर मैश करें।", "आकार दें और ब्रेड क्रम्स में लपेटें।", "शैलो फ्राई करें।"], method_en: ["Mash boiled veggies.", "Shape and coat in crumbs.", "Shallow fry."], tip_hi: "बीटरूट से अच्छा लाल रंग आता है।", tip_en: "Beetroot gives rich red color." },
+            { id: 40, category: "cat_snacks", title_hi: "आलू पराठा", title_en: "Aloo Paratha", ingredients_hi: ["2 किलो आलू", "2 किलो आटा", "अनारदाना", "धनिया", "मक्खन"], ingredients_en: ["2 kg Potato", "2 kg Flour", "Pomegranate Seeds", "Coriander", "Butter"], method_hi: ["आलू मसाला बनाएं।", "आटे में भरकर बेलें।", "तवे पर मक्खन के साथ सेकें।"], method_en: ["Make potato masala.", "Stuff in dough.", "Cook on tawa with butter."], tip_hi: "मसाला ठंडा करके भरें।", tip_en: "Cool filling before stuffing." },
+            { id: 41, category: "cat_snacks", title_hi: "बेसन चिल्ला", title_en: "Besan Chilla", ingredients_hi: ["1 किलो बेसन", "टमाटर-शिमला मिर्च (बारीक)", "अजवाइन", "हींग", "हरा धनिया"], ingredients_en: ["1 kg Besan", "Tomato-Capsicum (fine)", "Ajwain", "Hing", "Coriander"], method_hi: ["बेसन का घोल बनाएं।", "सब्जियां मिलाएं।", "तवे पर पतला फैलाएं।"], method_en: ["Make besan batter.", "Add veggies.", "Spread thin on tawa."], tip_hi: "नॉन-स्टिक तवे का प्रयोग करें।", tip_en: "Use non-stick tawa." },
+            { id: 42, category: "cat_snacks", title_hi: "साबूदाना वड़ा", title_en: "Sabudana Vada", ingredients_hi: ["1 किलो साबूदाना", "1 किलो आलू", "मूंगफली (कुटी)", "सेंधा नमक", "हरी मिर्च"], ingredients_en: ["1 kg Tapioca pearls", "1 kg Potato", "Peanuts (crushed)", "Rock Salt", "Green Chili"], method_hi: ["साबूदाना भिगोएं।", "आलू में मिलाकर वड़ा बनाएं।", "डीप फ्राई करें।"], method_en: ["Soak tapioca.", "Mix with potato, shape vada.", "Deep fry."], tip_hi: "साबूदाना पानी पूरी तरह सोख लेना चाहिए।", tip_en: "Tapioca must absorb all water." },
+            { id: 43, category: "cat_snacks", title_hi: "मिक्स वेज पकोड़े", title_en: "Mixed Veg Pakoras", ingredients_hi: ["1 किलो बेसन", "गोभी-पालक-आलू", "अजवाइन", "चावल का आटा", "तेल"], ingredients_en: ["1 kg Besan", "Gobi-Spinach-Potato", "Ajwain", "Rice Flour", "Oil"], method_hi: ["सब्जियां बेसन घोल में डुबोएं।", "कुरकुरा होने तक तलें।"], method_en: ["Dip veggies in batter.", "Fry till crisp."], tip_hi: "चावल का आटा कुरकुरापन लाता है।", tip_en: "Rice flour adds crispiness." },
+
+            // V. Sweets & Desserts (44-48)
+            { id: 44, category: "cat_sweets", title_hi: "चावल की खीर", title_en: "Rice Kheer", ingredients_hi: ["7 लीटर दूध", "300 ग्राम चावल (टूटा)", "800 ग्राम चीनी", "इलायची", "मेवे"], ingredients_en: ["7 L Milk", "300g Rice (broken)", "800g Sugar", "Cardamom", "Nuts"], method_hi: ["दूध गाढ़ा करें।", "चावल पकाएं।", "चीनी और मेवे डालें।"], method_en: ["Reduce milk.", "Cook rice.", "Add sugar and nuts."], tip_hi: "काजू पेस्ट डालने से रबड़ी जैसा स्वाद आता है।", tip_en: "Add cashew paste for Rabri texture." },
+            { id: 45, category: "cat_sweets", title_hi: "मूंग दाल हलवा", title_en: "Moong Dal Halwa", ingredients_hi: ["1 किलो मूंग दाल (दरदरी)", "1 किलो घी", "1 किलो चीनी", "केसर", "खोया"], ingredients_en: ["1 kg Moong Dal (coarse)", "1 kg Ghee", "1 kg Sugar", "Saffron", "Khoya"], method_hi: ["दाल को घी में सुनहरा होने तक भूनें (30-40 मिनट)।", "चाशनी मिलाएं।", "खोया डालें।"], method_en: ["Roast dal in ghee till golden (30-40 mins).", "Add syrup.", "Add khoya."], tip_hi: "लगातार चलाएं, वरना दाल जल जाएगी।", tip_en: "Stir constantly to avoid burning." },
+            { id: 46, category: "cat_sweets", title_hi: "गुलाब जामुन", title_en: "Gulab Jamun", ingredients_hi: ["1 किलो खोया", "200 ग्राम पनीर", "100 ग्राम मैदा", "चीनी (चाशनी)", "इलायची"], ingredients_en: ["1 kg Khoya", "200g Paneer", "100g Maida", "Sugar (Syrup)", "Cardamom"], method_hi: ["खोया-पनीर मसलकर आटा बनाएं।", "गोले तलें।", "चाशनी में डुबोएं।"], method_en: ["Knead khoya/paneer dough.", "Fry balls.", "Soak in syrup."], tip_hi: "तलते समय आंच बहुत धीमी रखें।", tip_en: "Fry on very low heat." },
+            { id: 47, category: "cat_sweets", title_hi: "सूजी का हलवा", title_en: "Sooji Halwa", ingredients_hi: ["1 किलो सूजी", "1 किलो घी", "1.5 किलो चीनी", "4 लीटर पानी", "केसर"], ingredients_en: ["1 kg Semolina", "1 kg Ghee", "1.5 kg Sugar", "4 L Water", "Saffron"], method_hi: ["सूजी को घी में भूनें।", "उबलता पानी और चीनी डालें।", "घी छूटने तक पकाएं।"], method_en: ["Roast semolina in ghee.", "Add boiling water/sugar.", "Cook till ghee separates."], tip_hi: "पानी की मात्रा सही रखें (1:4)।", tip_en: "Correct water ratio (1:4)." },
+            { id: 48, category: "cat_sweets", title_hi: "फ्रूट कस्टर्ड", title_en: "Fruit Custard", ingredients_hi: ["3 लीटर दूध", "100 ग्राम कस्टर्ड पाउडर", "चीनी", "केला-सेब-अनार-अंगूर", "वेनिला"], ingredients_en: ["3 L Milk", "100g Custard Powder", "Sugar", "Banana-Apple-Pom-Grapes", "Vanilla"], method_hi: ["दूध में कस्टर्ड पाउडर उबालें।", "ठंडा करें।", "फल मिलाएं।"], method_en: ["Boil custard powder in milk.", "Chill.", "Add fruits."], tip_hi: "खट्टे फल (संतरा, अनानास) न डालें।", tip_en: "Avoid citrus fruits." },
+
+            // VI. Ekadashi Specials (49-50)
+            { id: 49, category: "cat_ekadashi", title_hi: "सामो खिचड़ी", title_en: "Samo Khichari", ingredients_hi: ["1 किलो सामो चावल", "आलू (कटे हुए)", "मूंगफली", "जीरा", "सेंधा नमक"], ingredients_en: ["1 kg Samo Rice", "Potato (cubed)", "Peanuts", "Cumin", "Rock Salt"], method_hi: ["घी में जीरा-आलू भूनें।", "सामो और पानी डालें।", "पकने पर मूंगफली डालें।"], method_en: ["Roast cumin/potato in ghee.", "Add Samo/water.", "Add peanuts when done."], tip_hi: "एकादशी पर अन्न का प्रयोग न करें।", tip_en: "No grains on Ekadashi." },
+            { id: 50, category: "cat_ekadashi", title_hi: "आलू पनीर सब्जी (फलाहारी)", title_en: "Potato Paneer Sabji (Falahari)", ingredients_hi: ["1 किलो आलू (उबले)", "500 ग्राम पनीर", "टमाटर", "सेंधा नमक", "काली मिर्च"], ingredients_en: ["1 kg Potato (boiled)", "500g Paneer", "Tomatoes", "Rock Salt", "Black Pepper"], method_hi: ["जीरा-टमाटर तड़का लगाएं।", "आलू-पनीर डालें।", "काली मिर्च डालें।"], method_en: ["Temper cumin/tomato.", "Add potato/paneer.", "Add black pepper."], tip_hi: "हल्दी का प्रयोग न करें (यदि व्रत में वर्जित हो)।", tip_en: "Avoid turmeric if restricted." }
+        ];
+
+        const checklist_hi = ["सबने स्नान किया है?", "काउंटर साफ हैं?", "बिना चखे पकाने का नियम?", "तुलसी दल तैयार है?", "बर्तन साफ हैं?", "गैस की सुरक्षा जांची गई?", "कचरा हटा दिया गया?", "चेतना का ध्यान रखा?"];
+        const checklist_en = ["Everyone showered?", "Counters sanitized?", "No Tasting rule active?", "Tulasi leaf ready?", "Sink clear?", "Gas safety checked?", "Garbage removed?", "Consciousness Check?"];
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            initDashboard();
+            initRecipes();
+            initPlanner();
+        });
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'hi' ? 'en' : 'hi';
+            document.getElementById('lang-toggle-btn').textContent = currentLang === 'hi' ? 'English' : 'हिन्दी';
+            updateUI();
+            initDashboard();
+            initRecipes();
+            initPlanner();
+        }
+
+        function updateUI() {
+            document.documentElement.lang = currentLang;
+            const t = i18n[currentLang];
+
+            // Text keys
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (t[key]) el.textContent = t[key];
+            });
+
+            // IDs and Placeholders
+            document.getElementById('sidebar-subtitle').textContent = t.sidebar_subtitle;
+            document.getElementById('motto').textContent = t.motto;
+            document.getElementById('dash-welcome').textContent = t.dash_welcome;
+            document.getElementById('dash-subtitle').textContent = t.dash_subtitle;
+            document.getElementById('recipe-search').placeholder = t.search_placeholder;
+
+            // Section visibility refresh
+            const activeSection = document.querySelector('section:not(.hidden)').id;
+            if (activeSection === 'guidelines') showGuidelineTab(document.querySelector('.tab-active').id.split('-').pop());
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.target === sectionId) {
+                    btn.classList.add('bg-stone-800', 'text-saffron-400');
+                    btn.classList.remove('text-stone-300');
+                } else {
+                    btn.classList.remove('bg-stone-800', 'text-saffron-400');
+                    btn.classList.add('text-stone-300');
+                }
+            });
+        }
+
+        function initDashboard() {
+            const list = currentLang === 'hi' ? checklist_hi : checklist_en;
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+            list.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-4 p-4 bg-stone-50 rounded-lg border border-stone-200 hover:bg-white transition-all cursor-pointer select-none";
+                div.onclick = function () {
+                    const check = this.querySelector('span');
+                    check.textContent = check.textContent === '⬜' ? '✅' : '⬜';
+                    this.classList.toggle('bg-green-50');
+                    this.classList.toggle('border-green-200');
+                };
+                div.innerHTML = `<span class="text-2xl">⬜</span> <span class="text-stone-700 font-bold">${item}</span>`;
+                container.appendChild(div);
+            });
+
+            const quotes_hi = ["रसोई बहुत साफ होनी चाहिए और कुछ भी बर्बाद नहीं होना चाहिए।", "कृष्णा को सुंदर भोग की जरूरत नहीं है, वे निष्ठा देखते हैं।", "खाना बनाना एक कला है, लेकिन कृष्ण के लिए खाना बनाना भक्ति है।"];
+            const quotes_en = ["The kitchen should be very clean and nothing should be wasted.", "Krishna appreciates the sincere endeavor over the offering.", "Cooking for Krishna is the highest form of Devotional Service."];
+            const q = currentLang === 'hi' ? quotes_hi : quotes_en;
+            document.getElementById('daily-quote').textContent = `"${q[Math.floor(Math.random() * q.length)]}"`;
+
+            // Dynamic Chart Data Calculation
+            const counts = { cat_rice: 0, cat_dal: 0, cat_sabji: 0, cat_snacks: 0, cat_sweets: 0, cat_ekadashi: 0 };
+            recipes.forEach(r => {
+                if (counts[r.category] !== undefined) counts[r.category]++;
+            });
+            const chartData = [counts.cat_rice, counts.cat_dal, counts.cat_sabji, counts.cat_snacks, counts.cat_sweets, counts.cat_ekadashi];
+
+            const ctx = document.getElementById('recipeChart').getContext('2d');
+            if (recipeChartInstance) {
+                recipeChartInstance.destroy();
+            }
+            recipeChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        i18n[currentLang].cat_rice,
+                        i18n[currentLang].cat_dal,
+                        i18n[currentLang].cat_sabji,
+                        i18n[currentLang].cat_snacks,
+                        i18n[currentLang].cat_sweets,
+                        i18n[currentLang].cat_ekadashi
+                    ],
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: ['#fb923c', '#fca5a5', '#86efac', '#fdba74', '#fcd34d', '#c084fc'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: currentLang === 'hi' ? 'Noto Sans Devanagari' : 'Noto Sans' } } } } }
+            });
+        }
+
+        function showGuidelineTab(tab) {
+            const content = {
+                hi: {
+                    hygiene: `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-stone-50 p-6 rounded-xl border border-stone-200 shadow-sm">
+                                <h3 class="font-bold text-2xl text-saffron-700 mb-4 border-b-2 border-saffron-100 pb-2">🚿 व्यक्तिगत स्वच्छता</h3>
+                                <ul class="list-disc pl-6 space-y-4 text-stone-700 font-medium">
+                                    <li><strong>पूर्ण स्नान:</strong> रसोई में प्रवेश से पहले स्नान और तिलक अनिवार्य है।</li>
+                                    <li><strong>हाथ धोना:</strong> चेहरा, बाल या फर्श छूने के बाद साबुन से हाथ धोएं।</li>
+                                    <li><strong>मुख शुद्धि:</strong> सिंक में कुल्ला न करें। भोजन के ऊपर बात न करें।</li>
+                                </ul>
+                            </div>
+                            <div class="bg-stone-50 p-6 rounded-xl border border-stone-200 shadow-sm">
+                                <h3 class="font-bold text-2xl text-saffron-700 mb-4 border-b-2 border-saffron-100 pb-2">✨ रसोई की सफाई</h3>
+                                <ul class="list-disc pl-6 space-y-4 text-stone-700 font-medium">
+                                    <li><strong>No Black Spot:</strong> बर्तन चमकने चाहिए। कालिख बिल्कुल न हो।</li>
+                                    <li><strong>फर्श:</strong> हर सेवा के बाद पोंछा लगाएं।</li>
+                                    <li><strong>वर्जित सामग्री:</strong> प्याज, लहसुन, मशरूम, मांस, अंडा, कैफीन सख्त मना है।</li>
+                                </ul>
+                            </div>
+                        </div>`,
+                    process: `
+                        <div class="space-y-8">
+                            <div class="bg-saffron-50 p-6 rounded-xl border border-saffron-100 flex items-center gap-6">
+                                <div class="text-4xl">🧘</div>
+                                <div><h4 class="font-bold text-xl">भक्ति भाव (Bhakti)</h4><p>प्रभुपाद जी के प्रवचन या भजन सुनें। पकाने वाले का भाव अनाज में प्रवेश करता है।</p></div>
+                            </div>
+                            <div class="bg-stone-50 p-6 rounded-xl border border-stone-200 flex items-center gap-6">
+                                <div class="text-4xl">🚫</div>
+                                <div><h4 class="font-bold text-xl">चखना वर्जित है</h4><p>भरोसे और खुशबू से पकाएं। भगवान को अर्पित करने से पहले कोई नहीं चख सकता।</p></div>
+                            </div>
+                        </div>`,
+                    serving: `
+                        <div class="text-center">
+                            <h3 class="font-bold text-2xl mb-8">वैदिक परोसने का क्रम (घड़ी की दिशा में)</h3>
+                            <div class="relative w-72 h-72 mx-auto bg-white rounded-full border-8 border-stone-200 shadow-2xl flex items-center justify-center">
+                                <div class="absolute top-2 text-sm font-bold">1. नमक/नींबू</div>
+                                <div class="absolute top-10 right-10 text-sm font-bold">2. जल</div>
+                                <div class="absolute right-2 text-sm font-bold">3. कड़वा (सुक्ता)</div>
+                                <div class="absolute bottom-10 right-10 text-sm font-bold">4. साग/सब्जी</div>
+                                <div class="absolute bottom-2 text-sm font-bold">5. दाल/तली वस्तु</div>
+                                <div class="absolute bottom-10 left-10 text-sm font-bold">6. मुख्य सब्जी</div>
+                                <div class="absolute left-2 text-sm font-bold">7. चावल/रोटी</div>
+                                <div class="absolute top-10 left-10 text-sm font-bold">8. मिठाई</div>
+                                <div class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center text-stone-300 font-bold italic">BACE</div>
+                            </div>
+                            <p class="mt-10 italic text-stone-500">"परोसने वाला व्यक्ति दूसरों को खाते देख खुद से ज्यादा संतुष्ट होता है।"</p>
+                        </div>`
+                },
+                en: {
+                    hygiene: `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-stone-50 p-6 rounded-xl border border-stone-200 shadow-sm"><h3 class="font-bold text-2xl text-saffron-700 mb-4 border-b-2 border-saffron-100 pb-2">🚿 Personal Suci</h3><ul class="list-disc pl-6 space-y-4 text-stone-700 font-medium"><li><strong>Full Bath:</strong> Mandatory before entering. Fresh clothes & Tilak.</li><li><strong>Hands:</strong> Wash after touching face, hair or floor.</li><li><strong>Mouth:</strong> No rinsing in sinks. No talking over open pots.</li></ul></div><div class="bg-stone-50 p-6 rounded-xl border border-stone-200 shadow-sm"><h3 class="font-bold text-2xl text-saffron-700 mb-4 border-b-2 border-saffron-100 pb-2">✨ Kitchen Suci</h3><ul class="list-disc pl-6 space-y-4 text-stone-700 font-medium"><li><strong>No Black Spot:</strong> Pots must shine. No soot allowed.</li><li><strong>Floor:</strong> Mop after every session.</li><li><strong>Forbidden:</strong> Onion, garlic, mushroom, egg, meat strictly prohibited.</li></ul></div></div>`,
+                    process: `<div class="space-y-8"><div class="bg-saffron-50 p-6 rounded-xl border border-saffron-100 flex items-center gap-6"><div class="text-4xl">🧘</div><div><h4 class="font-bold text-xl">Consciousness (Bhakti)</h4><p>Play lectures or Bhajans. The cook's mood enters the grain.</p></div></div><div class="bg-stone-50 p-6 rounded-xl border border-stone-200 flex items-center gap-6"><div class="text-4xl">🚫</div><div><h4 class="font-bold text-xl">No Tasting</h4><p>Rely on smell and timing. The Lord is the first to taste.</p></div></div></div>`,
+                    serving: `<div class="text-center"><h3 class="font-bold text-2xl mb-8">Vedic Serving Order (Clockwise)</h3><div class="relative w-72 h-72 mx-auto bg-white rounded-full border-8 border-stone-200 shadow-2xl flex items-center justify-center"><div class="absolute top-2 text-sm font-bold">1. Salt/Lemon</div><div class="absolute top-10 right-10 text-sm font-bold">2. Water</div><div class="absolute right-2 text-sm font-bold">3. Bitter</div><div class="absolute bottom-10 right-10 text-sm font-bold">4. Spinach</div><div class="absolute bottom-2 text-sm font-bold">5. Dal/Fried</div><div class="absolute bottom-10 left-10 text-sm font-bold">6. Sabjis</div><div class="absolute left-2 text-sm font-bold">7. Rice/Roti</div><div class="absolute top-10 left-10 text-sm font-bold">8. Sweet</div></div></div>`
+                }
+            };
+            document.getElementById('guideline-content').innerHTML = content[currentLang][tab];
+
+            ['hygiene', 'process', 'serving'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tab) btn.classList.add('tab-active');
+                else btn.classList.remove('tab-active');
+            });
+        }
+
+        function initRecipes() {
+            const grid = document.getElementById('recipe-grid');
+            const search = document.getElementById('recipe-search');
+            const filter = document.getElementById('category-filter');
+
+            const cats = ['cat_rice', 'cat_dal', 'cat_sabji', 'cat_snacks', 'cat_sweets', 'cat_ekadashi'];
+            filter.innerHTML = `<option value="All">${currentLang === 'hi' ? 'सभी श्रेणियां' : 'All Categories'}</option>`;
+            cats.forEach(c => filter.innerHTML += `<option value="${c}">${i18n[currentLang][c]}</option>`);
+
+            function render(list) {
+                grid.innerHTML = '';
+                list.forEach(r => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-xl shadow-sm border border-stone-100 hover:shadow-lg transition-all cursor-pointer overflow-hidden flex flex-col group";
+                    card.onclick = () => openModal(r);
+                    card.innerHTML = `
+                        <div class="h-3 bg-saffron-500"></div>
+                        <div class="p-6 flex-1">
+                            <span class="text-[10px] font-bold text-saffron-600 uppercase tracking-widest">${i18n[currentLang][r.category]}</span>
+                            <h3 class="text-xl font-bold text-stone-800 mt-2 group-hover:text-saffron-700 transition-colors">${currentLang === 'hi' ? r.title_hi : r.title_en}</h3>
+                        </div>
+                        <div class="p-4 bg-stone-50 border-t border-stone-100 text-[10px] font-bold text-stone-400 uppercase tracking-widest text-center">
+                            ${currentLang === 'hi' ? 'देखें और स्केल करें' : 'View & Scale'}
+                        </div>`;
+                    grid.appendChild(card);
+                });
+            }
+
+            render(recipes);
+
+            const filterFn = () => {
+                const q = search.value.toLowerCase();
+                const cat = filter.value;
+                const filtered = recipes.filter(r => {
+                    const title = (currentLang === 'hi' ? r.title_hi : r.title_en).toLowerCase();
+                    return title.includes(q) && (cat === 'All' || r.category === cat);
+                });
+                render(filtered);
+            };
+
+            search.oninput = filterFn;
+            filter.onchange = filterFn;
+        }
+
+        let activeRecipe = null;
+        function openModal(r) {
+            activeRecipe = r;
+            document.getElementById('modal-title').textContent = currentLang === 'hi' ? r.title_hi : r.title_en;
+            document.getElementById('modal-category').textContent = i18n[currentLang][r.category];
+            document.getElementById('modal-tip').textContent = currentLang === 'hi' ? r.tip_hi : r.tip_en;
+            document.getElementById('scaler-input').value = 25;
+
+            const method = currentLang === 'hi' ? r.method_hi : r.method_en;
+            const methodList = document.getElementById('modal-method');
+            methodList.innerHTML = '';
+            method.forEach(m => methodList.innerHTML += `<li>${m}</li>`);
+
+            updateScaling();
+            const modal = document.getElementById('recipe-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('recipe-modal');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function updateScaling() {
+            const val = parseInt(document.getElementById('scaler-input').value) || 25;
+            const factor = val / 25;
+            const ings = currentLang === 'hi' ? activeRecipe.ingredients_hi : activeRecipe.ingredients_en;
+            const list = document.getElementById('modal-ingredients');
+            list.innerHTML = '';
+            ings.forEach(ing => {
+                const scaled = ing.replace(/^(\d+(\.\d+)?)/, m => {
+                    const n = (parseFloat(m) * factor).toFixed(1);
+                    return n.endsWith('.0') ? parseInt(n) : n;
+                });
+                list.innerHTML += `<li class="flex items-center gap-3"><span class="w-2 h-2 bg-saffron-500 rounded-full"></span>${scaled}</li>`;
+            });
+        }
+
+        function initPlanner() {
+            const groups = [
+                { id: 'plan-rice', cat: 'cat_rice', label: i18n[currentLang].cat_rice },
+                { id: 'plan-dal', cat: 'cat_dal', label: i18n[currentLang].cat_dal },
+                { id: 'plan-sabji', cat: 'cat_sabji', label: i18n[currentLang].cat_sabji },
+                { id: 'plan-sweet', cat: 'cat_sweets', label: i18n[currentLang].cat_sweets }
+            ];
+            const container = document.getElementById('planner-selectors');
+            container.innerHTML = '';
+            groups.forEach(g => {
+                const html = `
+                    <div>
+                        <label class="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">${g.label}</label>
+                        <select id="${g.id}" class="w-full p-3 border border-stone-200 rounded-xl bg-stone-50 font-bold text-stone-700">
+                            <option value="">-- चुनें --</option>
+                            ${recipes.filter(r => r.category === g.cat).map(r => `<option value="${currentLang === 'hi' ? r.title_hi : r.title_en}">${currentLang === 'hi' ? r.title_hi : r.title_en}</option>`).join('')}
+                        </select>
+                    </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function generatePlan() {
+            const preview = document.getElementById('menu-preview');
+            const items = ['plan-rice', 'plan-dal', 'plan-sabji', 'plan-sweet'].map(id => document.getElementById(id).value).filter(v => v);
+
+            if (items.length === 0) {
+                preview.innerHTML = `<span class="text-6xl mb-4">🥣</span><p>${i18n[currentLang].planner_placeholder}</p>`;
+                return;
+            }
+
+            let html = `<h4 class="text-2xl font-bold text-stone-800 mb-8 uppercase tracking-widest border-b-4 border-saffron-200 pb-2">${currentLang === 'hi' ? 'विशेष भोज मेन्यू' : 'SPECIAL FEAST MENU'}</h4><div class="space-y-4 w-full">`;
+            items.forEach(it => {
+                html += `<div class="bg-white p-5 rounded-xl shadow-sm border border-stone-200 text-center font-bold text-xl text-saffron-800">${it}</div>`;
+            });
+            html += `</div><p class="mt-8 text-stone-400 italic">"Prasadam is Mercy"</p>`;
+            preview.innerHTML = html;
+        }
+
+        function printMenu() {
+            const win = window.open('', '', 'width=800,height=600');
+            win.document.write(`<html><head><title>BACE MENU</title><style>body{font-family: sans-serif; text-align: center; padding: 50px;} .item{padding: 20px; border-bottom: 2px solid #eee; font-size: 24px; font-weight: bold;}</style></head><body>${document.getElementById('menu-preview').innerHTML}</body></html>`);
+            win.document.close();
+            win.print();
+        }
+
+        function resetChecklist() {
+            document.querySelectorAll('#checklist-container div').forEach(div => {
+                div.querySelector('span').textContent = '⬜';
+                div.classList.remove('bg-green-50', 'border-green-200');
+            });
+        }
+    </script>
+</body>
+
+</html>   pknb  
