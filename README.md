@@ -12,7 +12,7 @@ A professional kitchen management system for BACE residents, maintaining Sattvic
 
 ## Live Demo
 
-Visit: [BACE Kitchen Manager](https://your-username.github.io/bace-kitchen/)
+Visit: [BACE Kitchen Manager](https://Anmol272001.github.io/bace-kitchen/)
 
 ## Local Usage
 
